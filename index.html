@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Personalization Systems Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..900;1,9..144,400..700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #f1faee;
+      --navy-2: #ffffff;
+      --navy-3: #ffffff;
+      --navy-4: #e7f0ea;
+      --cyan: #457b9d;
+      --cyan-dim: #6f97b0;
+      --cyan-soft: rgba(168,218,220,.45);
+      --amber: #d98324;
+      --amber-2: #c0721a;
+      --amber-soft: rgba(217,131,36,.15);
+      --ink: #1d3557;
+      --ink-dim: #517693;
+      --ink-faint: #7c95a9;
+      --good: #2a9d8f;
+      --good-soft: rgba(42,157,143,.15);
+      --bad: #e63946;
+      --bad-soft: rgba(230,57,70,.12);
+      --line: rgba(29,53,87,.15);
+      --line-2: rgba(29,53,87,.07);
+      --grid: rgba(69,123,157,.06);
+      --serif: "Fraunces", Georgia, serif;
+      --sans: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --rail: 288px;
+      --shadow: 0 16px 38px -18px rgba(29,53,87,.3);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--navy);
+      background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 30px 30px;
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.55;
+      display: grid;
+      grid-template-columns: var(--rail) 1fr;
+      min-height: 100%;
+    }
+    a { color: var(--cyan); text-decoration: none; }
+    ::selection { background: var(--cyan-soft); color: var(--ink); }
+    .mono { font-family: var(--mono); }
+
+    /* sidebar */
+    #rail-col { background: #eef5ef; border-right: 1px solid var(--line); }
+    #rail {
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+      background: linear-gradient(180deg,#ffffff,#eef5ef);
+      padding: 22px 16px 40px;
+      scrollbar-width: thin; scrollbar-color: var(--cyan-dim) transparent;
+    }
+    #rail::-webkit-scrollbar { width: 8px; }
+    #rail::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 8px; }
+    .brand { display: flex; align-items: center; gap: 11px; cursor: pointer; margin-bottom: 4px; }
+    .brand .mark {
+      width: 34px; height: 34px; flex: none; border: 1.5px solid var(--cyan); border-radius: 7px;
+      display: grid; place-items: center; color: var(--cyan); font-family: var(--mono); font-weight: 600;
+      box-shadow: inset 0 0 14px rgba(69,123,157,.14); position: relative; background: var(--cyan-soft);
+    }
+    .brand .mark::after {
+      content: ""; position: absolute; inset: 4px; border: 1px dashed rgba(69,123,157,.35); border-radius: 4px;
+    }
+    .brand h1 { font-family: var(--serif); font-size: 21px; font-weight: 600; margin: 0; letter-spacing: .3px; line-height: 1; }
+    .brand p { margin: 2px 0 0; font-family: var(--mono); font-size: 9.5px; letter-spacing: 2.5px; color: var(--ink-faint); text-transform: uppercase; }
+    .search { position: relative; margin: 20px 0 8px; }
+    .search input {
+      width: 100%; background: var(--navy-4); border: 1px solid var(--line); color: var(--ink);
+      font-family: var(--mono); font-size: 12.5px; padding: 9px 11px 9px 30px; border-radius: 8px; outline: none;
+    }
+    .search input:focus { border-color: var(--cyan-dim); box-shadow: 0 0 0 3px var(--cyan-soft); }
+    .search svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--ink-faint); }
+    .results { list-style: none; margin: 6px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: none; }
+    .results.show { display: block; }
+    .results li { padding: 7px 11px; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; background: var(--navy-4); }
+    .results li:hover, .results li.active { background: var(--cyan-soft); color: var(--ink); }
+    .results li small { color: var(--ink-faint); font-family: var(--mono); font-size: 10px; }
+    .rail-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 2.5px; color: var(--ink-faint); text-transform: uppercase; margin: 22px 4px 8px; }
+    .progress { display: flex; align-items: center; gap: 8px; margin: 14px 2px 2px; font-family: var(--mono); font-size: 10px; color: var(--ink-faint); }
+    .progress .bar { flex: 1; height: 4px; background: var(--navy-4); border-radius: 3px; overflow: hidden; }
+    .progress .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg,var(--cyan),var(--amber)); transition: width .5s; }
+    nav ul { list-style: none; margin: 0; padding: 0; }
+    nav li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 13.5px; color: var(--ink-dim); transition: background .15s, color .15s; position: relative; }
+    nav li:hover { background: rgba(69,123,157,.09); color: var(--ink); }
+    nav li.active { background: var(--cyan-soft); color: var(--ink); }
+    nav li.active::before { content: ""; position: absolute; left: -16px; top: 6px; bottom: 6px; width: 3px; background: var(--cyan); border-radius: 3px; }
+    nav li .num { font-family: var(--mono); font-size: 10px; color: var(--ink-faint); width: 18px; flex: none; }
+    nav li.active .num, nav li.visited .num { color: var(--cyan); }
+    nav li .t { flex: 1; line-height: 1.25; }
+    nav li.visited:not(.active) .t::after { content: " ✓"; color: var(--good); font-size: 10px; }
+    .lvl { font-family: var(--mono); font-size: 8.5px; letter-spacing: .5px; padding: 2px 5px; border-radius: 4px; flex: none; text-transform: uppercase; }
+    .lvl.core { color: var(--cyan); background: var(--cyan-soft); }
+    .lvl.advanced { color: var(--amber); background: var(--amber-soft); }
+    .lvl.reference { color: var(--ink-dim); background: rgba(132,153,173,.13); }
+    .rail-study { width: 100%; margin-top: 16px; font-family: var(--mono); font-size: 12px; padding: 10px; border: 1px solid var(--cyan-dim); background: var(--cyan-soft); color: var(--cyan); border-radius: 8px; cursor: pointer; letter-spacing: .6px; transition: all .14s; }
+    .rail-study:hover { background: var(--cyan); color: #fff; }
+    .rail-repo { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; padding: 9px; font-family: var(--mono); font-size: 11px; letter-spacing: .4px; color: var(--ink-dim); border: 1px solid var(--line); border-radius: 8px; transition: all .14s; }
+    .rail-repo:hover { color: var(--ink); border-color: var(--cyan-dim); background: var(--cyan-soft); }
+    .rail-repo svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
+
+    /* main */
+    #main { padding: 46px 54px 120px; max-width: 1020px; width: 100%; }
+    #menuBtn { display: none; }
+    .scrim { display: none; }
+    .reveal { opacity: 0; transform: translateY(14px); animation: rise .5s cubic-bezier(.2,.7,.3,1) forwards; animation-delay: calc(var(--i,0) * 55ms); }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+
+    /* home */
+    .hero { margin-bottom: 34px; }
+    .hero .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; color: var(--cyan); text-transform: uppercase; }
+    .hero h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(34px,5vw,52px); line-height: 1.04; margin: 12px 0 0; letter-spacing: -.5px; }
+    .hero h2 em { font-style: italic; color: var(--amber); }
+    .hero .lede { font-size: 16px; color: var(--ink-dim); max-width: 60ch; margin-top: 16px; }
+    .entry { margin: 30px 0 8px; }
+    .entry .q { font-family: var(--serif); font-style: italic; font-size: 19px; color: var(--ink); margin-bottom: 13px; }
+    .entry .chips { display: flex; flex-wrap: wrap; gap: 9px; }
+    .echip { font-family: var(--mono); font-size: 12.5px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 30px; cursor: pointer; color: var(--ink-dim); background: var(--navy-3); transition: all .15s; display: flex; align-items: center; gap: 7px; }
+    .echip:hover { border-color: var(--cyan); color: var(--ink); background: var(--cyan-soft); transform: translateY(-1px); }
+    .echip span { color: var(--cyan); }
+    .home-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(232px,1fr)); gap: 14px; margin-top: 34px; }
+    .tcard { border: 1px solid var(--line); border-radius: 12px; padding: 16px; cursor: pointer; background: var(--navy-3); transition: all .18s; position: relative; overflow: hidden; }
+    .tcard::after { content: ""; position: absolute; right: -30px; top: -30px; width: 80px; height: 80px; border: 1px dashed var(--line-2); border-radius: 50%; }
+    .tcard:hover { border-color: var(--cyan-dim); transform: translateY(-3px); box-shadow: var(--shadow); }
+    .tcard .tn { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
+    .tcard h3 { font-family: var(--serif); font-size: 18px; font-weight: 600; margin: 6px 0 7px; }
+    .tcard p { font-size: 13px; color: var(--ink-dim); margin: 0; line-height: 1.5; }
+    .tcard .lvl { position: absolute; top: 14px; right: 14px; z-index: 1; }
+
+    /* topic */
+    .thead { border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 26px; }
+    .crumb { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; color: var(--ink-faint); text-transform: uppercase; display: flex; gap: 10px; align-items: center; }
+    .crumb a { color: var(--ink-faint); cursor: pointer; }
+    .crumb a:hover { color: var(--cyan); }
+    .thead h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(30px,4vw,42px); margin: 14px 0 0; letter-spacing: -.4px; line-height: 1.06; }
+    .thead .blurb { font-size: 16px; color: var(--ink-dim); max-width: 64ch; margin-top: 12px; }
+    .lens { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 20px; }
+    .lens .lt { font-family: var(--mono); font-size: 10.5px; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--line-2); color: var(--ink-faint); background: var(--navy-3); letter-spacing: .3px; }
+    .lens .lt.on { color: var(--navy); background: var(--cyan); border-color: var(--cyan); font-weight: 600; }
+    .lens-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 2px; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 9px; margin-top: 22px; }
+    .sect { margin: 40px 0 16px; display: flex; align-items: baseline; gap: 12px; }
+    .sect h3 { font-family: var(--serif); font-size: 24px; font-weight: 600; margin: 0; }
+    .sect .tag { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--cyan); text-transform: uppercase; }
+    .sect .rule { flex: 1; height: 1px; background: var(--line); }
+
+    /* lab / schedule */
+    .lab {
+      position: relative; border: 1px solid var(--line); border-radius: 14px;
+      background: radial-gradient(120% 120% at 0% 0%,rgba(168,218,220,.3),transparent 55%), var(--navy-3);
+      padding: 22px; margin-top: 6px; box-shadow: var(--shadow);
+    }
+    .lab::before, .lab::after { content: ""; position: absolute; width: 13px; height: 13px; border: 2px solid var(--cyan-dim); opacity: .5; }
+    .lab::before { left: -1px; top: -1px; border-right: 0; border-bottom: 0; border-top-left-radius: 6px; }
+    .lab::after { right: -1px; bottom: -1px; border-left: 0; border-top: 0; border-bottom-right-radius: 6px; }
+    .lab-cap { font-family: var(--mono); font-size: 10px; letter-spacing: 2.5px; color: var(--cyan); text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .lab-cap::before { content: "▸"; }
+
+    /* schedule table */
+    .sched { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .sched thead tr { border-bottom: 1.5px solid var(--cyan-dim); }
+    .sched th { font-family: var(--mono); font-size: 9.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--cyan); padding: 8px 12px; text-align: left; font-weight: 600; }
+    .sched td { padding: 9px 12px; border-bottom: 1px solid var(--line-2); vertical-align: top; font-size: 13px; color: var(--ink-dim); line-height: 1.45; }
+    .sched tbody tr:last-child td { border-bottom: 0; }
+    .sched tbody tr:hover td { background: rgba(69,123,157,.04); }
+    .sched td:first-child { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); white-space: nowrap; }
+    .src-tag { display: inline-block; font-family: var(--mono); font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; background: var(--cyan-soft); color: var(--cyan); border: 1px solid rgba(69,123,157,.3); margin-right: 2px; }
+    .chk { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 4px; background: var(--good-soft); color: var(--good); border: 1px solid rgba(42,157,143,.3); }
+    .milestone-bar { margin-top: 18px; padding: 12px 16px; border-left: 3px solid var(--amber); border-radius: 0 8px 8px 0; background: var(--amber-soft); font-family: var(--mono); font-size: 12px; color: var(--amber-2); letter-spacing: .3px; }
+
+    /* concepts */
+    .chiprow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .cchip { font-family: var(--mono); font-size: 12.5px; padding: 7px 13px; border: 1px solid var(--line); border-radius: 7px; cursor: pointer; color: var(--ink-dim); background: var(--navy-3); transition: all .14s; }
+    .cchip:hover { border-color: var(--cyan-dim); color: var(--ink); }
+    .cchip.on { background: var(--cyan); color: var(--navy); border-color: var(--cyan); font-weight: 600; }
+    .cbody { border-left: 2px solid var(--cyan); padding: 4px 0 4px 18px; margin: 18px 0 6px; }
+    .cbody h4 { font-family: var(--serif); font-size: 20px; font-weight: 600; margin: 0 0 8px; }
+    .cbody p { margin: 0 0 10px; color: var(--ink-dim); font-size: 14.5px; }
+    .cbody ul { margin: 0 0 10px; padding-left: 18px; color: var(--ink-dim); font-size: 14px; }
+    .cbody li { margin: 4px 0; }
+    .cbody strong { color: var(--ink); }
+    .cbody code { font-family: var(--mono); font-size: 12.5px; background: var(--navy-4); padding: 1px 5px; border-radius: 4px; color: var(--cyan); }
+    .cbody .pro { color: var(--good); }
+    .cbody .con { color: var(--bad); }
+
+    /* deep dives */
+    details.deep { border: 1px solid var(--line); border-radius: 10px; margin: 10px 0; background: var(--navy-3); overflow: hidden; }
+    details.deep summary { cursor: pointer; padding: 13px 16px; font-family: var(--mono); font-size: 13px; color: var(--ink); list-style: none; display: flex; justify-content: space-between; align-items: center; }
+    details.deep summary::-webkit-details-marker { display: none; }
+    details.deep summary::after { content: "+"; color: var(--cyan); font-size: 18px; }
+    details.deep[open] summary::after { content: "-"; }
+    details.deep summary:hover { background: var(--navy-4); }
+    details.deep .dd { padding: 0 16px 15px; color: var(--ink-dim); font-size: 14px; }
+    details.deep .dd ul { padding-left: 18px; }
+
+    /* answer */
+    .answer { position: relative; border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(135deg,rgba(168,218,220,.35),#ffffff); padding: 20px 56px 20px 20px; margin-top: 8px; }
+    .answer p { margin: 0; font-size: 15px; color: var(--ink); line-height: 1.65; }
+    .answer .copy { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: none; border: 1px solid var(--line); cursor: pointer; color: var(--ink-dim); }
+    .answer .copy svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .answer .copy.done { border-color: var(--cyan-dim); color: var(--cyan); }
+
+    /* sources grid */
+    .src-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 12px; margin-top: 6px; }
+    .src-card { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--navy-3); transition: all .15s; }
+    .src-card:hover { border-color: var(--cyan-dim); box-shadow: var(--shadow); }
+    .src-card .sn { font-family: var(--mono); font-size: 10px; color: var(--cyan); letter-spacing: 1px; margin-bottom: 6px; }
+    .src-card h4 { font-family: var(--serif); font-size: 15px; font-weight: 600; margin: 0 0 6px; }
+    .src-card p { font-size: 12.5px; color: var(--ink-dim); margin: 0 0 10px; line-height: 1.45; }
+    .src-card a { font-family: var(--mono); font-size: 11px; color: var(--cyan); }
+
+    /* nav btns */
+    .btn { font-family: var(--mono); font-size: 12px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--cyan-dim); background: var(--cyan-soft); color: var(--cyan); cursor: pointer; transition: all .14s; letter-spacing: .3px; }
+    .btn:hover { background: var(--cyan); color: var(--navy); transform: translateY(-1px); }
+    .btn.ghost { background: none; border-color: var(--line); color: var(--ink-dim); }
+    .btn.ghost:hover { background: var(--navy-4); color: var(--ink); transform: none; }
+
+    /* responsive */
+    @media (max-width: 880px) {
+      body { grid-template-columns: 1fr; overflow-x: hidden; }
+      #rail-col { background: none; border-right: none; }
+      #rail { position: fixed; left: 0; top: 0; width: 280px; z-index: 40; transform: translateX(-100%); transition: transform .25s; box-shadow: var(--shadow); }
+      #rail.open { transform: none; }
+      #main { padding: 70px 20px 90px; max-width: 100%; min-width: 0; }
+      #menuBtn { display: inline-flex; position: fixed; top: 14px; left: 14px; z-index: 50; background: var(--navy-3); border: 1px solid var(--line); color: var(--cyan); border-radius: 9px; padding: 9px 12px; font-family: var(--mono); cursor: pointer; }
+      .scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 35; }
+      .scrim.show { display: block; }
+      .sched { font-size: 12px; }
+      .sched th, .sched td { padding: 7px 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { animation: none; opacity: 1; transform: none; }
+      * { transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <button id="menuBtn" aria-label="menu">≡ topics</button>
+  <div class="scrim" id="scrim"></div>
+  <div id="rail-col">
+    <aside id="rail">
+      <div class="brand" id="brandHome">
+        <div class="mark">PS</div>
+        <div>
+          <h1>Personalization Lab</h1>
+          <p>56-day learning track</p>
+        </div>
+      </div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="searchBox" placeholder="search modules…" autocomplete="off" />
+        <ul class="results" id="results"></ul>
+      </div>
+      <div class="rail-label">Modules</div>
+      <nav id="nav"><ul id="navList"></ul></nav>
+      <div class="progress">
+        <span id="progTxt">0 / 8</span>
+        <div class="bar"><i id="progBar"></i></div>
+      </div>
+      <a class="rail-repo" href="https://github.com/narendraparigi1987/personalization-systems-lab" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.46-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.36-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05a9.3 9.3 0 0 1 2.5-.34c.85 0 1.71.12 2.5.34 1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.48-.01 2.82 0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
+        <span>View on GitHub</span>
+      </a>
+    </aside>
+  </div>
+  <main id="main"></main>
+
+  <script>
+    "use strict";
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+    function el(tag, attrs={}, ...kids) {
+      const n = document.createElement(tag);
+      for (const k in attrs) {
+        if (k==="class") n.className=attrs[k];
+        else if (k==="html") n.innerHTML=attrs[k];
+        else if (k.startsWith("on")) n.addEventListener(k.slice(2),attrs[k]);
+        else if (attrs[k]!=null) n.setAttribute(k,attrs[k]);
+      }
+      for (const c of kids.flat()) {
+        if (c==null) continue;
+        n.append(c.nodeType?c:document.createTextNode(c));
+      }
+      return n;
+    }
+    const store = {
+      get(){try{return JSON.parse(localStorage.getItem("psl-visited")||"[]")}catch(e){return[]}},
+      add(id){try{const v=this.get();if(!v.includes(id)){v.push(id);localStorage.setItem("psl-visited",JSON.stringify(v))}}catch(e){}}
+    };
+
+    const ALL_LENSES = [
+      ["retrieval","Retrieval"],["ranking","Ranking"],["training","Training"],
+      ["evaluation","Evaluation"],["serving","Serving"],["agents","Agents"],
+      ["multimodal","Multimodal"],["cold-start","Cold-start"]
+    ];
+    function lens(active) {
+      return el("div",{},
+        el("div",{class:"lens-label"},"Module focus"),
+        el("div",{class:"lens"},
+          ALL_LENSES.map(([k,t])=>el("div",{class:"lt"+(active.includes(k)?" on":"")},t))
+        )
+      );
+    }
+
+    function concepts(list) {
+      if(!list||!list.length) return null;
+      const body = el("div",{class:"cbody"});
+      const chips = el("div",{class:"chiprow"},
+        list.map((c,i)=>el("div",{class:"cchip"+(i===0?" on":""),
+          onclick(e){
+            [...chips.children].forEach(x=>x.classList.remove("on"));
+            e.target.classList.add("on"); show(i);
+          }},c.name))
+      );
+      function show(i){body.innerHTML="<h4>"+list[i].name+"</h4>"+list[i].body;}
+      show(0);
+      return el("div",{},chips,body);
+    }
+
+    function deepDives(list) {
+      if(!list||!list.length) return null;
+      return el("div",{},
+        list.map(d=>el("details",{class:"deep"},
+          el("summary",{},d.q),
+          el("div",{class:"dd",html:d.a})
+        ))
+      );
+    }
+
+    function answerBlock(text) {
+      if(!text) return null;
+      const p = el("p",{html:text});
+      const copyIcon='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+      const doneIcon='<svg viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></svg>';
+      const btn = el("button",{class:"btn ghost copy",title:"Copy",html:copyIcon,
+        onclick(){navigator.clipboard&&navigator.clipboard.writeText(p.textContent).then(()=>{
+          btn.innerHTML=doneIcon;btn.classList.add("done");
+          setTimeout(()=>{btn.innerHTML=copyIcon;btn.classList.remove("done");},1400);
+        });}
+      });
+      return el("div",{},
+        section("Key takeaway","remember this"),
+        el("div",{class:"answer"},btn,p)
+      );
+    }
+
+    function section(title,tag) {
+      return el("div",{class:"sect"},
+        el("h3",{},title),
+        tag?el("span",{class:"tag"},tag):null,
+        el("div",{class:"rule"})
+      );
+    }
+
+    function scheduleTable(days, milestone) {
+      const wrap = el("div",{class:"lab"});
+      wrap.append(el("div",{class:"lab-cap"},"Week schedule"));
+      const tbl = el("table",{class:"sched"});
+      tbl.append(el("thead",{},el("tr",{},
+        el("th",{},"Day"),el("th",{},"Source"),el("th",{},"Build"),el("th",{},"Checkpoint")
+      )));
+      const tbody = el("tbody",{});
+      for(const d of days){
+        const tr = el("tr",{});
+        tr.append(el("td",{},String(d.day)));
+        tr.append(el("td",{html:`<span class="src-tag">${d.src}</span>`}));
+        tr.append(el("td",{},d.build));
+        tr.append(el("td",{html:`<span class="chk">${d.check}</span>`}));
+        tbody.append(tr);
+      }
+      tbl.append(tbody);
+      wrap.append(tbl);
+      if(milestone){
+        wrap.append(el("div",{class:"milestone-bar"},`Milestone — ${milestone}`));
+      }
+      return wrap;
+    }
+
+    function sourceCards(srcs) {
+      const SOURCES = {
+        S1:{label:"S1",title:"Netflix: System Architectures",desc:"Serving architecture, experimentation, and rapid innovation.",url:"https://netflixtechblog.com/system-architectures-for-personalization-and-recommendation-e081aa94b5d8"},
+        S2:{label:"S2",title:"Netflix: FM-Intent",desc:"Session intent modeling and next-item prediction.",url:"https://netflixtechblog.com/fm-intent-predicting-user-session-intent-with-hierarchical-multi-task-learning-94c75e18f4b8"},
+        S3:{label:"S3",title:"Vespa: Hybrid Text Search",desc:"Retrieval/ranking split and hybrid BM25 + vector search.",url:"https://docs.vespa.ai/en/learn/tutorials/hybrid-search.html"},
+        S4:{label:"S4",title:"ColBERT",desc:"Late-interaction neural retrieval.",url:"https://github.com/stanford-futuredata/ColBERT"},
+        S5:{label:"S5",title:"Eugene Yan: System Design",desc:"Production tradeoffs, architecture, and discovery-system thinking.",url:"https://eugeneyan.com/writing/system-design-for-discovery/"},
+        S6:{label:"S6",title:"OpenAI: Function Calling",desc:"Tool use, data access, and LLM-integrated workflows.",url:"https://platform.openai.com/docs/guides/function-calling"},
+        S7:{label:"S7",title:"OpenAI: Structured Outputs",desc:"Reliable extraction and schema-first LLM output.",url:"https://platform.openai.com/docs/guides/structured-outputs"},
+        S8:{label:"S8",title:"Model Context Protocol",desc:"Prompts, resources, and tools as agent integration primitives.",url:"https://modelcontextprotocol.io/specification/2025-06-18/server"},
+        S9:{label:"S9",title:"Anthropic: Code Execution with MCP",desc:"Multi-tool agents and tool-heavy workflows in practice.",url:"https://www.anthropic.com/engineering/code-execution-with-mcp"},
+        S10:{label:"S10",title:"DSPy",desc:"Compositional LLM programming, RAG, and agent loop optimization.",url:"https://github.com/stanfordnlp/dspy"},
+      };
+      const grid = el("div",{class:"src-grid"});
+      for(const k of srcs){
+        const s=SOURCES[k];
+        if(!s) continue;
+        grid.append(el("div",{class:"src-card"},
+          el("div",{class:"sn"},s.label),
+          el("h4",{},s.title),
+          el("p",{},s.desc),
+          el("a",{href:s.url,target:"_blank",rel:"noreferrer"},"Read →")
+        ));
+      }
+      return grid;
+    }
+
+    /* ============================================================ TOPICS */
+    const TOPICS = [
+      {
+        id:"fundamentals",
+        title:"Fundamentals",
+        level:"core",
+        days_range:"Days 1–7",
+        blurb:"Repo scaffold, synthetic data generation, BM25 baseline search, and offline evaluation metrics.",
+        fit:["retrieval","evaluation"],
+        sources:["S5","S1","S3"],
+        days:[
+          {day:1,src:"S5",build:"Repo scaffold, env setup, notebook layout, synthetic catalog design",check:"Project runs locally"},
+          {day:2,src:"S5",build:"Define schemas: User, Item, SearchEvent, ClickEvent, PurchaseEvent",check:"Data model committed"},
+          {day:3,src:"S1",build:"Generate synthetic behavior logs and user/item distributions",check:"Dataset created"},
+          {day:4,src:"S3",build:"Implement BM25 baseline search",check:"Search returns ranked results"},
+          {day:5,src:"S5",build:"Add Recall@K, MRR, NDCG evaluation notebook",check:"Evaluation notebook works"},
+          {day:6,src:"S1",build:"Do failure analysis on baseline search",check:"Top failure modes listed"},
+          {day:7,src:"S5",build:"Write week-one summary and design notes",check:"Week 1 review complete"},
+        ],
+        milestone:"Search V1 complete — BM25, evaluation notebook, and failure analysis",
+        concepts:[
+          {name:"BM25",body:'<p><strong>BM25</strong> is a probabilistic ranking function that scores documents by term frequency and inverse document frequency, with saturation and length normalization.</p><ul><li><strong>TF saturation</strong>: term repetitions have diminishing returns — <code>freq / (freq + k1)</code>.</li><li><strong>IDF</strong>: rare terms score higher — log scale penalizes common words.</li><li><strong>Length norm</strong>: long docs normalized so they don\'t dominate by bulk.</li></ul><p>Fast, interpretable, surprisingly strong baseline. The first thing you deploy before any neural approach.</p>'},
+          {name:"Offline evaluation",body:'<p>How you measure retrieval quality without running a live experiment.</p><ul><li class="pro"><strong>Recall@K</strong>: of all relevant items, what fraction appear in the top-K results?</li><li class="pro"><strong>MRR</strong>: mean reciprocal rank of the first relevant result — good for "find anything relevant."</li><li class="pro"><strong>NDCG</strong>: normalized discounted cumulative gain — rewards relevant items ranked higher.</li></ul><p>Always run offline eval before an A/B test. It\'s cheap and catches regressions early.</p>'},
+          {name:"Synthetic data",body:'<p>When you have no production logs, synthesize behavior. Key distributions to model:</p><ul><li><strong>Item popularity</strong>: power-law (most items rarely seen).</li><li><strong>User preferences</strong>: cluster users into types with category affinities.</li><li><strong>Session patterns</strong>: browse → compare → buy funnel with realistic conversion rates.</li></ul><p>Synthetic data lets you build and test the pipeline before any real traffic.</p>'},
+          {name:"Schema design",body:'<p>The data model you define on Day 2 ripples through every module. Core entities:</p><ul><li><strong>User</strong>: id, demographics, preference vector.</li><li><strong>Item</strong>: id, category, price, text fields, image URL.</li><li><strong>SearchEvent</strong>: query, timestamp, user_id, results returned.</li><li><strong>ClickEvent</strong>: item_id, position, dwell_time.</li><li><strong>PurchaseEvent</strong>: item_id, price, session context.</li></ul>'},
+        ],
+        deepDives:[
+          {q:"Why BM25 before any neural model?",a:'<p>It\'s fast (inverted index, no GPU), interpretable (you can debug why a result ranks), and it\'s a strong baseline. Most neural retrieval papers compare against BM25, and the gap closes when domain data is scarce. Build it first to know what you\'re actually improving.</p>'},
+          {q:"What makes a good synthetic dataset?",a:'<p>Realism at the distribution level, not the item level. You need: realistic item popularity (power law — 80% of clicks go to 20% of items), user preference cohorts, and noisy behavior (clicks that don\'t lead to purchase, typos in queries). The goal is that your evaluation metrics on synthetic data predict real-data behavior directionally.</p>'},
+        ],
+        interviewAnswer:"I start with a BM25 baseline over an inverted index — it's fast, interpretable, and a surprisingly strong starting point. I measure quality with Recall@K, MRR, and NDCG on a labeled eval set. Failure analysis on the baseline tells me what to build next: vocabulary mismatch points to embeddings, poor ranking tells me I need a reranker, and missing intent signals say I need query understanding.",
+      },
+      {
+        id:"retrieval",
+        title:"Retrieval Systems",
+        level:"core",
+        days_range:"Days 8–14",
+        blurb:"Dense embeddings, ANN indexing, hybrid BM25 + vector fusion, and LLM query expansion.",
+        fit:["retrieval","evaluation"],
+        sources:["S3","S4","S5","S6"],
+        days:[
+          {day:8,src:"S4",build:"Generate item embeddings with a sentence-transformer baseline",check:"Embeddings indexed"},
+          {day:9,src:"S4",build:"Add ANN retrieval with FAISS",check:"Vector search works"},
+          {day:10,src:"S3",build:"Compare BM25 vs vector retrieval on evaluation set",check:"Comparison notebook ready"},
+          {day:11,src:"S3",build:"Build hybrid retrieval score fusion (RRF)",check:"Hybrid search works"},
+          {day:12,src:"S7",build:"Implement query normalization and facet-style structured extraction",check:"Query parser works"},
+          {day:13,src:"S6",build:"Add LLM query rewrite / expansion",check:"Rewritten queries stored"},
+          {day:14,src:"S5",build:"Build retrieval dashboard — latency vs quality",check:"Retrieval checkpoint complete"},
+        ],
+        milestone:"Hybrid search engine complete — BM25 + dense + fusion + LLM query expansion",
+        concepts:[
+          {name:"Dense retrieval",body:'<p><strong>Dense retrieval</strong> encodes queries and items into a shared vector space. Similarity is computed via dot product or cosine.</p><ul><li>A <strong>bi-encoder</strong> encodes query and item independently — fast at serving time.</li><li>A <strong>cross-encoder</strong> jointly encodes the pair — slow but more accurate; used for reranking.</li></ul><p>Bi-encoders scale; cross-encoders polish the top-K. Use both in a two-stage pipeline.</p>'},
+          {name:"ANN + FAISS",body:'<p>Exact nearest-neighbour search is O(n) per query — too slow for large catalogs. <strong>Approximate NN</strong> indexes trade a small recall loss for large speedups.</p><ul><li><strong>IVF</strong>: cluster centroids, search only nearby clusters.</li><li><strong>HNSW</strong>: navigable small-world graph — fast query, moderate memory.</li><li><strong>PQ</strong>: quantize vectors to reduce memory footprint.</li></ul><p>FAISS provides all three. Tune <code>nprobe</code> to balance recall vs latency.</p>'},
+          {name:"Hybrid fusion",body:'<p>Neither BM25 nor dense retrieval dominates. BM25 wins on exact keyword matches; dense wins on semantic synonymy.</p><ul><li><strong>RRF</strong> (Reciprocal Rank Fusion): <code>1/(k+rank_bm25) + 1/(k+rank_dense)</code>. Robust, no tuning.</li><li><strong>Linear combination</strong>: <code>α·score_bm25 + (1-α)·score_dense</code>. Needs calibration.</li></ul><p>RRF is the default choice until you have labeled data to tune weights.</p>'},
+          {name:"Query expansion",body:'<p>Short queries are ambiguous. Expansion adds related terms to improve recall.</p><ul><li><strong>Pseudo-relevance feedback</strong>: take top-K results, extract their key terms.</li><li><strong>LLM rewrite</strong>: prompt a model to rephrase the query in multiple ways, search each, merge results.</li></ul><p>LLM expansion is powerful but adds latency. Cache rewrites for common queries.</p>'},
+          {name:"ColBERT / late interaction",body:'<p><strong>Late interaction</strong> keeps token-level embeddings (unlike bi-encoders which pool to one vector). At query time, each query token attends to each document token — MaxSim aggregation.</p><ul><li class="pro">More expressive than bi-encoder, much faster than cross-encoder.</li><li class="con">Storage: you store one vector per token, not one per document.</li></ul><p>Useful when bi-encoder recall is the bottleneck and you can afford the storage.</p>'},
+        ],
+        deepDives:[
+          {q:"When does hybrid retrieval beat pure dense?",a:"<p>Dense retrieval struggles with rare words, proper nouns, and exact-match queries (e.g. a product SKU). BM25 handles these cleanly. Hybrid fusion wins whenever the query mixes broad semantic intent with specific terms — which is most real user queries. Studies consistently show 5–15% NDCG gains from fusion over either system alone.</p>"},
+          {q:"How do you tune the fusion weight α?",a:'<p>Run a grid search over α on your offline eval set (labeled query-item pairs). If you lack labels, start with RRF (parameter-free) and only switch to linear combination once you have ground truth. Key insight: the optimal α shifts by query type — informational queries favor dense, navigational queries favor BM25. Query classification (Day 30) lets you apply different weights per type.</p>'},
+        ],
+        interviewAnswer:"My retrieval stack is two-stage: a fast ANN index over dense embeddings for recall, then BM25 in parallel, fused with RRF. I use a sentence-transformer bi-encoder for embeddings — fast to serve, decent quality out of the box. For challenging queries I add LLM rewrite to generate alternative phrasings. The key tradeoff is latency: each retrieval arm adds P99 latency, so I gate them behind query classification rather than running all paths for every query.",
+      },
+      {
+        id:"recommendations",
+        title:"Recommendation Systems",
+        level:"core",
+        days_range:"Days 15–21",
+        blurb:"Collaborative filtering, top-N candidate generation, offline evaluation, diversity, and session-aware signals.",
+        fit:["retrieval","ranking","training","evaluation"],
+        sources:["S1","S5","S2"],
+        days:[
+          {day:15,src:"S1",build:"Create user-item interaction matrix",check:"Matrix built"},
+          {day:16,src:"S1",build:"Train collaborative-filtering baseline (ALS)",check:"First recommender runs"},
+          {day:17,src:"S1",build:"Generate top-N recommendations",check:"Recommendation endpoint works"},
+          {day:18,src:"S5",build:"Add MAP / HitRate / Recall@K evaluation",check:"Recommender metrics notebook ready"},
+          {day:19,src:"S5",build:"Add diversity with MMR or reranking rules",check:"Diversity feature added"},
+          {day:20,src:"S2",build:"Add session-aware signals to recommendation logic",check:"Session features available"},
+          {day:21,src:"S5",build:"Compare popularity vs CF vs session-aware recommender",check:"Week 3 comparison complete"},
+        ],
+        milestone:"Recommendation engine complete — evaluation, diversity controls, session signals",
+        concepts:[
+          {name:"Collaborative filtering",body:'<p><strong>CF</strong> recommends items based on what similar users liked — no item content needed.</p><ul><li><strong>User-user CF</strong>: find users with similar histories, recommend what they liked.</li><li><strong>Item-item CF</strong>: for a seed item, find co-purchased/co-viewed items.</li><li><strong>Matrix factorization (ALS)</strong>: decompose the interaction matrix into latent user and item vectors. Fast, parallelizable, handles implicit feedback.</li></ul>'},
+          {name:"Evaluation metrics",body:'<p>Offline metrics for recommenders:</p><ul><li><strong>Recall@K</strong>: of the held-out items a user interacted with, what fraction appear in top-K recommendations?</li><li><strong>HitRate@K</strong>: fraction of users with at least one relevant item in top-K.</li><li><strong>MAP</strong>: mean average precision — rewards relevant items ranked high across positions.</li><li><strong>NDCG@K</strong>: discounts relevance by position — a relevant item at rank 1 beats rank 10.</li></ul>'},
+          {name:"Diversity via MMR",body:'<p><strong>MMR</strong> (Maximal Marginal Relevance) balances relevance and novelty in a greedy reranking step:</p><ul><li>Score each candidate: <code>λ·relevance − (1−λ)·max_sim_to_already_selected</code>.</li><li>High λ = relevance-first; low λ = diversity-first.</li></ul><p>Diversity matters because a list of near-identical items wastes slots and reduces engagement.</p>'},
+          {name:"Session-aware signals",body:'<p>Long-term preference vectors miss what the user cares about <em>right now</em>.</p><ul><li><strong>Recent click sequence</strong>: last N items clicked, in order.</li><li><strong>Dwell time</strong>: how long did they view each item?</li><li><strong>Session intent</strong>: is this a browse session or a buy-now session? (FM-Intent, S2)</li></ul><p>Blend session signals with long-term preferences: session context weights decay as the session ages.</p>'},
+        ],
+        deepDives:[
+          {q:"Why does ALS outperform SGD for implicit feedback?",a:"<p>ALS (Alternating Least Squares) treats unobserved interactions as negative evidence with lower confidence, rather than ignoring them. It alternates between fixing user vectors and solving for item vectors in closed form. SGD only samples observed interactions, missing the implicit negative signal from items the user never clicked. For implicit feedback (clicks, views, purchases — not ratings), ALS consistently wins.</p>"},
+          {q:"How do you evaluate diversity without hurting relevance?",a:"<p>Use coverage metrics alongside relevance: catalog coverage (what % of items ever appear in recommendations), intra-list diversity (average pairwise distance within a result list), and novelty (how rarely recommended items are seen by users). A healthy system shows improving coverage without NDCG regression. The MMR λ parameter is your lever — tune it with an offline A/B simulation on historical data.</p>"},
+        ],
+        interviewAnswer:"I start with ALS over an implicit feedback matrix — it handles the unobserved-as-negative problem well. I evaluate with NDCG@K and HitRate@K. For diversity I apply MMR reranking with a tuned λ, which costs almost no latency. For recency I blend long-term user vectors with session signals weighted by recency — the session context captures 'mode switching' that a static profile misses entirely.",
+      },
+      {
+        id:"personalization",
+        title:"Personalization Layer",
+        level:"core",
+        days_range:"Days 22–28",
+        blurb:"User profile vectors, category affinity, session modeling, intent prediction, and personalized reranking.",
+        fit:["ranking","training","evaluation"],
+        sources:["S1","S2","S5"],
+        days:[
+          {day:22,src:"S1",build:"Build user profile vectors",check:"Profile store created"},
+          {day:23,src:"S2",build:"Add category affinity and short-term interest features",check:"Affinity features working"},
+          {day:24,src:"S2",build:"Add session-state modeling from recent clicks",check:"Session state available"},
+          {day:25,src:"S2",build:"Implement intent prediction: browse / compare / buy",check:"Intent classifier works"},
+          {day:26,src:"S1",build:"Personalized reranking using profile + session + retrieval",check:"Personalized reranker works"},
+          {day:27,src:"S5",build:"Build offline A/B simulation framework",check:"Experiment harness ready"},
+          {day:28,src:"S5",build:"Write architecture note for personalized search/ranking",check:"Week 4 design doc done"},
+        ],
+        milestone:"Personalized search and ranking complete — intent classification, offline A/B harness",
+        concepts:[
+          {name:"User profile vectors",body:'<p>A user profile vector summarizes long-term preferences. Built from aggregated interaction history:</p><ul><li>Category preference weights (normalized click/purchase counts by category).</li><li>Price sensitivity (distribution of purchased price points).</li><li>Brand affinity (brand-level click-through rates).</li></ul><p>Store in a low-latency key-value store (Redis, DynamoDB). Refresh daily or on each purchase event.</p>'},
+          {name:"Intent prediction",body:'<p>Netflix FM-Intent (S2) shows that session intent shifts the optimal recommendation strategy. Three key intents:</p><ul><li><strong>Browse</strong>: user is exploring — diversity and novelty win.</li><li><strong>Compare</strong>: user is evaluating options — show similar items with clear differentiation.</li><li><strong>Buy</strong>: user is ready to convert — show top-ranked, lowest-friction items.</li></ul><p>Predict intent from: query terms, click-through rate, dwell time, scroll depth, time-of-day.</p>'},
+          {name:"Personalized reranking",body:'<p>Reranking takes a candidate set from retrieval and re-scores using user context:</p><ul><li><code>score = α·retrieval_score + β·profile_match + γ·session_relevance</code>.</li><li><strong>Profile match</strong>: cosine similarity between item embedding and user profile vector.</li><li><strong>Session relevance</strong>: similarity to recent click sequence (short-term interest).</li></ul><p>The reranker runs on the top-200 candidates returned by retrieval — not the full catalog.</p>'},
+          {name:"Offline A/B simulation",body:'<p>Before running a live A/B test, simulate it on historical data:</p><ul><li>Replay historical queries through both the control and treatment rankers.</li><li>Compare offline metrics (NDCG, HitRate) as a proxy for live metrics (CTR, conversion).</li><li>Log-replay has bias (only shows items that were historically served), so use counterfactual estimators (IPS) if available.</li></ul><p>Offline simulation is cheap — run hundreds of experiments before spending traffic budget.</p>'},
+        ],
+        deepDives:[
+          {q:"How do you avoid filter bubbles with personalization?",a:"<p>Hard personalization (only show items matching the user profile) reduces exploration and creates filter bubbles. Solutions: (1) epsilon-greedy: occasionally serve non-personalized results to explore. (2) Apply MMR diversity to the personalized ranking. (3) Segment exploration budget by user engagement level — high-engagement users tolerate more novelty. Netflix uses multi-objective ranking that explicitly optimizes for engagement diversity alongside relevance.</p>"},
+          {q:"What's the difference between short-term and long-term signals?",a:"<p>Long-term signals (purchases, ratings over months) reflect stable preferences: preferred categories, price sensitivity. Short-term signals (last 5 clicks in the current session) reflect the user's current goal, which may diverge from their history. A user who always buys electronics but is now shopping for a birthday gift needs short-term signals to override their long-term profile. FM-Intent models this hierarchically: a session-level LSTM feeds into a user-level attention mechanism.</p>"},
+        ],
+        interviewAnswer:"I represent users with two vectors: a long-term profile built from purchase history (stable, refreshed daily) and a short-term session vector built from the last N clicks (volatile, computed on each request). Intent prediction — browse vs compare vs buy — determines which vector to weight more heavily in the reranker. An offline A/B simulation framework lets me validate ranking changes before any live traffic, using NDCG as the proxy metric.",
+      },
+      {
+        id:"llm-search",
+        title:"LLM Search Systems",
+        level:"advanced",
+        days_range:"Days 29–35",
+        blurb:"Tool-calling wrappers, structured query understanding, facet extraction, item enrichment, and LLM reranking.",
+        fit:["retrieval","ranking","serving"],
+        sources:["S6","S7","S10"],
+        days:[
+          {day:29,src:"S6",build:"Add tool-calling wrapper around search and recommend APIs",check:"LLM can call tools"},
+          {day:30,src:"S7",build:"Add query classification with structured output",check:"Queries classified reliably"},
+          {day:31,src:"S7",build:"Add query rewrite with JSON schema output",check:"Rewrites are machine-readable"},
+          {day:32,src:"S7",build:"Add facet extraction: brand, price, condition, location",check:"Facet extraction works"},
+          {day:33,src:"S7",build:"Add item enrichment: tags, summaries, attributes",check:"Item enrichment pipeline works"},
+          {day:34,src:"S10",build:"Prototype an LLM reranker / scoring loop",check:"LLM reranker running"},
+          {day:35,src:"S10",build:"Compare traditional ranking vs LLM-assisted ranking",check:"LLM impact measured"},
+        ],
+        milestone:"LLM search layer complete — structured query understanding, enrichment, and reranking",
+        concepts:[
+          {name:"Structured outputs",body:'<p>Raw LLM text is hard to parse reliably. <strong>Structured outputs</strong> (OpenAI S7) enforce a JSON schema at the token level using constrained decoding.</p><ul><li>Define a Pydantic model or JSON schema for your expected output.</li><li>The model is guaranteed to return valid JSON matching the schema — no post-processing hacks.</li></ul><p>Use this for: query classification, facet extraction, item attribute tagging.</p>'},
+          {name:"Query classification",body:'<p>Classify each query before deciding how to handle it:</p><ul><li><strong>Navigational</strong>: user wants a specific item (SKU, brand+model). → BM25-heavy, exact match.</li><li><strong>Informational</strong>: user is researching. → semantic retrieval, diverse results.</li><li><strong>Transactional</strong>: user is ready to buy. → personalized ranking, conversion-optimized.</li></ul><p>Classification adds ~50ms but dramatically improves routing decisions downstream.</p>'},
+          {name:"Facet extraction",body:'<p>Extract structured attributes from freeform queries:</p><ul><li><code>"red Nike shoes under $100"</code> → <code>{brand: "Nike", color: "red", max_price: 100, category: "shoes"}</code>.</li></ul><p>These facets filter the candidate set before ranking — much more precise than BM25 on the raw query. Use structured outputs to guarantee the schema, then apply each facet as a hard filter.</p>'},
+          {name:"Item enrichment",body:'<p>Raw item metadata is often sparse. LLMs can enrich it offline:</p><ul><li>Generate tags: <code>["outdoor", "waterproof", "camping"]</code> from a product description.</li><li>Write structured summaries for search index ingestion.</li><li>Normalize attributes: map <code>"Sz. 10.5"</code> → <code>{"size": 10.5, "unit": "US"}</code>.</li></ul><p>Run enrichment as a batch pipeline at ingest time — not on the hot path.</p>'},
+          {name:"LLM reranking",body:'<p>Use an LLM to score the top-K retrieved items against the query:</p><ul><li>Prompt: "Given query Q, rank these 10 items by relevance. Return a ranked JSON list."</li><li>DSPy (S10) lets you optimize the prompt using labeled examples.</li></ul><p class="con">Latency: 1–2s for 10 items. Gate behind complexity classifier — only use for hard queries.</p><p class="pro">Quality gain: 10–20% NDCG improvement on complex, multi-faceted queries.</p>'},
+        ],
+        deepDives:[
+          {q:"When is LLM reranking worth the latency cost?",a:"<p>LLM reranking earns its keep on long, multi-faceted queries ('waterproof hiking boots with wide toe box under $150') where traditional models struggle with the constraint conjunction. On simple head queries ('Nike Air Max') traditional ranking is as good and 10× faster. A query complexity classifier routes hard queries to the LLM reranker and easy queries straight to the fast ranker — net latency impact near zero, quality wins on the tail.</p>"},
+          {q:"How do you keep facet extraction reliable?",a:"<p>Structured outputs (constrained decoding) are necessary but not sufficient. You also need: (1) a schema that marks all fields optional — queries often don't express every facet. (2) A validation step that checks extracted values against your catalog vocabulary (e.g. known brand names). (3) A fallback: if extraction confidence is low, skip filtering and use the raw query. DSPy lets you optimize the extraction prompt with a small set of labeled examples, improving reliability significantly.</p>"},
+        ],
+        interviewAnswer:"I layer LLM query understanding on top of the retrieval stack rather than replacing it. Structured outputs classify the query and extract facets (brand, price, category) which hard-filter the candidate set. For complex queries — where the constraint conjunction is hard for BM25 or embeddings — an LLM reranker rescores the top-K. I route to the LLM reranker based on query complexity to keep median latency low while improving tail quality.",
+      },
+      {
+        id:"agents",
+        title:"Agentic Systems",
+        level:"advanced",
+        days_range:"Days 36–42",
+        blurb:"MCP tool interfaces, multi-step tool chaining, memory layer, agent evaluation, and end-to-end shopping assistant.",
+        fit:["serving","agents"],
+        sources:["S8","S9","S6","S10"],
+        days:[
+          {day:36,src:"S8",build:"Define tool, prompt, and resource interfaces",check:"Agent primitives defined"},
+          {day:37,src:"S6",build:"Expose search / recommend / profile as callable tools",check:"Tool API layer ready"},
+          {day:38,src:"S8",build:"Build a simple agent that chooses one tool and answers",check:"First agent demo works"},
+          {day:39,src:"S9",build:"Add multi-step tool use and tool chaining",check:"Multi-step agent works"},
+          {day:40,src:"S8",build:"Add memory / preference storage",check:"Memory layer persists"},
+          {day:41,src:"S10",build:"Add agent evaluation prompts and task scoring",check:"Agent eval notebook ready"},
+          {day:42,src:"S9",build:"Demo a shopping / search assistant workflow end to end",check:"Agent demo complete"},
+        ],
+        milestone:"Marketplace agent complete — tool use, memory, and end-to-end demo",
+        concepts:[
+          {name:"MCP primitives",body:'<p><strong>Model Context Protocol</strong> (S8) defines three integration points:</p><ul><li><strong>Tools</strong>: callable functions — search, recommend, get_item_detail.</li><li><strong>Resources</strong>: readable data — user profile, session history.</li><li><strong>Prompts</strong>: reusable prompt templates with parameters.</li></ul><p>These three primitives are enough to build a full agent integration. Define each interface explicitly before writing any agent logic.</p>'},
+          {name:"Tool design",body:'<p>Good tool design determines agent reliability. Rules:</p><ul><li><strong>One action per tool</strong>: <code>search(query)</code> not <code>search_and_recommend(query)</code>.</li><li><strong>Explicit schemas</strong>: every parameter typed and documented — the model reads the docstring.</li><li><strong>Deterministic outputs</strong>: same input → same output shape. Never return freeform text from a tool.</li><li><strong>Error messages</strong>: return structured errors the agent can reason about.</li></ul>'},
+          {name:"Memory layer",body:'<p>Without memory, every agent session starts cold. Two memory types:</p><ul><li><strong>Session memory</strong>: the conversation history + tool call results within one session. Already in the context window.</li><li><strong>Persistent memory</strong>: user preferences, saved items, past purchases. Must be stored externally and retrieved on session start.</li></ul><p>On Day 40, implement a simple key-value store keyed by user_id. Retrieve on session init, update on significant events (purchase, explicit preference statement).</p>'},
+          {name:"Agent evaluation",body:'<p>Evaluating agents is harder than evaluating retrievers — the output is a multi-step trajectory, not a ranked list.</p><ul><li><strong>Task completion rate</strong>: did the agent answer the user\'s actual request?</li><li><strong>Tool call accuracy</strong>: did it call the right tools in the right order?</li><li><strong>Trajectory length</strong>: fewer steps to the right answer = better.</li></ul><p>DSPy (S10) lets you define task examples and optimize the agent\'s system prompt/tool selection using those examples as training signal.</p>'},
+        ],
+        deepDives:[
+          {q:"When does an agent outperform a fixed pipeline?",a:"<p>Fixed pipelines win when the query type is predictable and latency is critical — they're faster and more reliable. Agents win when the query is open-ended, the user might need multiple information sources, or the right retrieval strategy depends on what earlier tool calls return. A shopping query like 'find me something for a 10-year-old who likes dinosaurs under $30' benefits from agent reasoning: classify → search toys → filter by age/price → recommend → explain. A fixed pipeline can't handle the conditional logic as cleanly.</p>"},
+          {q:"How do you prevent tool call hallucination?",a:"<p>Three defenses: (1) Use structured outputs (S7) for tool call parameters — constrained decoding prevents malformed inputs. (2) Validate tool inputs server-side before execution — reject out-of-range parameters. (3) Limit the tool set to what the agent actually needs — a smaller action space reduces ambiguity. Also: prompt the agent to state its reasoning before calling a tool ('I will call search because…') — this forces it to check whether the call makes sense.</p>"},
+        ],
+        interviewAnswer:"I expose search, recommend, and user_profile as MCP tools with explicit typed schemas. The agent decides which tools to call and in what order based on the user's request. Memory is a two-tier system: session context in the prompt window, persistent preferences in a key-value store retrieved on init. I evaluate agents with task completion rate and tool call accuracy on a test suite of representative shopping tasks, using DSPy to optimize the system prompt against those examples.",
+      },
+      {
+        id:"multimodal",
+        title:"Multimodal Systems",
+        level:"advanced",
+        days_range:"Days 43–49",
+        blurb:"Image embeddings, visual similarity search, text + image fusion, cold-start items, and cold-start users.",
+        fit:["retrieval","ranking","cold-start","multimodal"],
+        sources:["S4","S3","S5","S1"],
+        days:[
+          {day:43,src:"S4",build:"Add image embeddings for items (CLIP or equivalent)",check:"Image vectors indexed"},
+          {day:44,src:"S4",build:"Build visual similarity search",check:"Similar-items-by-image works"},
+          {day:45,src:"S3",build:"Fuse text + image retrieval",check:"Multimodal retrieval works"},
+          {day:46,src:"S5",build:"Handle cold-start items with metadata-first ranking",check:"New-item path works"},
+          {day:47,src:"S5",build:"Handle cold-start users with popularity + onboarding signals",check:"New-user path works"},
+          {day:48,src:"S1",build:"Add lightweight exploration / diversity logic",check:"Better catalog coverage"},
+          {day:49,src:"S5",build:"Write multimodal + cold-start analysis note",check:"Week 7 review complete"},
+        ],
+        milestone:"Multimodal search complete — visual similarity, fusion retrieval, cold-start paths",
+        concepts:[
+          {name:"CLIP embeddings",body:'<p><strong>CLIP</strong> (Contrastive Language–Image Pretraining) embeds images and text into a shared vector space trained with contrastive loss.</p><ul><li>A text query like "red running shoe" and a matching product image have high cosine similarity.</li><li>Zero-shot: works on new categories without fine-tuning.</li></ul><p>Run CLIP inference offline to pre-embed your catalog. At query time, embed the query text and run ANN over image vectors.</p>'},
+          {name:"Multimodal fusion",body:'<p>Fuse text and image retrieval scores for each candidate item:</p><ul><li><code>score = α·text_score + (1−α)·image_score</code></li><li>Use RRF for a parameter-free version.</li></ul><p>Image signals help for fashion and home goods where visual similarity matters more than text. Text signals help for electronics where specs dominate.</p>'},
+          {name:"Cold-start items",body:'<p>A new item has no clicks, purchases, or reviews. You can\'t use CF scores. Metadata-first ranking:</p><ul><li>Use category-level popularity as a prior (new electronics get electronics-level scores).</li><li>Rank by content similarity to popular items in the same category.</li><li>Inject new items at a controlled rate ("freshness injection") to gather signal quickly.</li></ul><p>After N clicks, graduate the item to the standard ranking pipeline.</p>'},
+          {name:"Cold-start users",body:'<p>A new user has no history. Strategies in order of preference:</p><ul><li><strong>Onboarding quiz</strong>: ask 2–3 preference questions. Map answers to user segments.</li><li><strong>Geo/time signals</strong>: trending items in the user\'s region right now.</li><li><strong>Popularity fallback</strong>: personalized popularity by device type or referral source.</li><li><strong>Exploration injection</strong>: serve diverse results to gather signal fast.</li></ul>'},
+        ],
+        deepDives:[
+          {q:"How do you handle the modality gap between text and image embeddings?",a:"<p>Even with CLIP's shared space, the text and image embedding distributions differ — a phenomenon called the 'modality gap.' In practice: (1) Score normalize each modality separately (z-score or min-max) before fusion, since raw cosine scores are not comparable across modalities. (2) Fine-tune CLIP on your catalog with contrastive pairs of product descriptions and images — this closes the gap for your domain. (3) Use a late-fusion approach (RRF) which is score-magnitude-agnostic.</p>"},
+          {q:"What's the fastest way to gather signal for cold-start items?",a:"<p>Freshness injection: dedicate 5–10% of result slots to new items, sampled proportionally to their metadata similarity to popular items. This gathers real click/purchase signal quickly. Track a 'confidence threshold' — once an item has N interactions, it graduates to the main ranker. Combine with position-debiased click models to avoid overcorrecting for items served in prominent positions.</p>"},
+        ],
+        interviewAnswer:"For multimodal retrieval I embed item images with CLIP and fuse image and text ANN scores using RRF. For cold-start items I use metadata-first ranking with freshness injection — serving new items in a small fraction of slots to gather real signal. For cold-start users I start with geo/popularity signals and transition to personalization once there are 3+ interactions.",
+      },
+      {
+        id:"production",
+        title:"Production Systems",
+        level:"reference",
+        days_range:"Days 50–56",
+        blurb:"Candidate generation architecture, feature store, A/B framework, observability, guardrails, and capstone demo.",
+        fit:["retrieval","ranking","serving","evaluation"],
+        sources:["S5","S1","S6","S8","S10"],
+        days:[
+          {day:50,src:"S5",build:"Design candidate generation → ranking → reranking architecture",check:"Final architecture draft"},
+          {day:51,src:"S1",build:"Add feature-store layer for search/reco features",check:"Feature pipeline works"},
+          {day:52,src:"S5",build:"Add experimentation and A/B test reporting",check:"Experiment layer ready"},
+          {day:53,src:"S5",build:"Add observability: logs, latency, quality dashboards",check:"Monitoring in place"},
+          {day:54,src:"S6",build:"Add guardrails and fallback behavior",check:"Safe fallback path works"},
+          {day:55,src:"S8",build:"Finalize agent/search system diagram and API boundaries",check:"System design complete"},
+          {day:56,src:"S10",build:"Final capstone demo, repo cleanup, README, summary",check:"Finished portfolio project"},
+        ],
+        milestone:"Production-ready architecture — feature store, observability, A/B framework, capstone demo",
+        concepts:[
+          {name:"Two-stage architecture",body:'<p>The standard production shape for search and recommendation:</p><ul><li><strong>Stage 1 — Candidate generation</strong>: fast, high-recall retrieval from the full catalog. ANN + BM25. Target: top-200 candidates in &lt;50ms.</li><li><strong>Stage 2 — Ranking</strong>: accurate, context-aware scoring of candidates. Feature-rich model, personalized. Target: top-20 in &lt;100ms.</li><li><strong>Stage 3 — Reranking</strong> (optional): business rules, diversity, LLM reranking. Top-10 final results.</li></ul>'},
+          {name:"Feature store",body:'<p>A feature store separates feature computation from model serving:</p><ul><li><strong>Offline</strong>: batch-compute features (user history aggregates, item statistics) and store in a columnar format.</li><li><strong>Online</strong>: serve pre-computed features at &lt;5ms. Redis or DynamoDB.</li><li><strong>Consistency</strong>: training and serving use the same feature definitions — prevents train/serve skew.</li></ul><p>Train/serve skew is the #1 source of production model degradation.</p>'},
+          {name:"Experimentation",body:'<p>Online A/B tests are the ground truth. Offline metrics predict direction but not magnitude.</p><ul><li><strong>Traffic split</strong>: random user-level assignment, not request-level (consistency matters).</li><li><strong>Guardrail metrics</strong>: metrics you must not degrade (latency P99, error rate) even if your primary metric improves.</li><li><strong>Statistical power</strong>: minimum detectable effect × traffic volume → required experiment duration.</li></ul>'},
+          {name:"Observability",body:'<p>You can\'t debug what you can\'t measure. Three pillars:</p><ul><li><strong>Request logs</strong>: every query, results served, latency breakdown per stage.</li><li><strong>Quality metrics</strong>: CTR, conversion, position bias, zero-result rate — tracked per query type.</li><li><strong>Model health</strong>: embedding drift, feature distribution shift, cache hit rates.</li></ul><p>Alert on zero-result rate (retrieval broken), P99 latency spikes (slow model), and CTR drops (ranking broken).</p>'},
+        ],
+        deepDives:[
+          {q:"How do you prevent train/serve skew?",a:"<p>Train/serve skew happens when the feature values at training time differ from serving time — a common cause of silent model degradation. Prevention: (1) Write features to the feature store first, then read from the store for both training and serving — same code path. (2) Log serving-time features alongside predictions; use these logs for retraining, not recomputed features. (3) Monitor feature distributions in production vs training set — alert when they diverge beyond a threshold.</p>"},
+          {q:"What guardrail metrics do you set for a ranking experiment?",a:"<p>Guardrails protect against regressions the primary metric might miss. Typical set: P95/P99 latency (ranking must not get slower), error rate (no increase in failed requests), zero-result rate (retrieval must not break), and revenue per session (prevent quality-metric wins that hurt business). If any guardrail is violated, the experiment auto-stops regardless of the primary metric result.</p>"},
+        ],
+        interviewAnswer:"Production search and recommendation is a three-stage pipeline: candidate generation for recall, ranking for precision, and reranking for business rules and diversity. Feature store consistency between training and serving is the hardest operational problem — I use a point-in-time correct feature join for training and the same store at serving time. I run A/B experiments with both primary metrics (NDCG, conversion) and guardrails (latency, error rate) that auto-stop the experiment on regression.",
+      },
+    ];
+
+    /* ============================================================ render */
+    function renderNav() {
+      const visited = store.get();
+      navList.innerHTML = "";
+      TOPICS.forEach((t,i)=>{
+        navList.append(el("li",{
+          class: visited.includes(t.id)?"visited":"",
+          "data-id": t.id,
+          onclick(){go(t.id);}
+        },
+          el("span",{class:"num"},String(i+1).padStart(2,"0")),
+          el("span",{class:"t"},t.title),
+          el("span",{class:"lvl "+t.level},t.level)
+        ));
+      });
+      updateProgress();
+    }
+    function updateProgress() {
+      const v = store.get().filter(id=>TOPICS.some(t=>t.id===id));
+      $("#progBar").style.width=(v.length/TOPICS.length*100)+"%";
+      $("#progTxt").textContent=v.length+" / "+TOPICS.length;
+    }
+    function setActive(id) {
+      $$("#navList li").forEach(li=>li.classList.toggle("active",li.dataset.id===id));
+    }
+
+    function renderHome() {
+      setActive(null);
+      const wrap = el("div",{});
+      let i=0;
+      const r=c=>{c.classList.add("reveal");c.style.setProperty("--i",i++);return c;};
+      wrap.append(r(el("div",{class:"hero"},
+        el("div",{class:"kicker"},"56-day learning track"),
+        el("h2",{},"Build systems that ",el("em",{},"actually")," personalize."),
+        el("p",{class:"lede"},"Eight modules. Hands-on code each day. One synchronized reading track. Search, retrieval, recommendation, personalization, LLM query understanding, agents, and multimodal — all in one codebase.")
+      )));
+      wrap.append(r(el("div",{class:"entry"},
+        el("div",{class:"q"},"I want to build…"),
+        el("div",{class:"chips"},
+          [["hybrid search","retrieval"],["a recommender","recommendations"],["personalized ranking","personalization"],["LLM query understanding","llm-search"],["an AI shopping agent","agents"],["visual similarity search","multimodal"],["a production pipeline","production"]]
+          .map(([t,id])=>el("div",{class:"echip",onclick(){go(id);}},el("span",{},"→"),t))
+        )
+      )));
+      const grid = el("div",{class:"home-grid"});
+      TOPICS.forEach((t,n)=>grid.append(el("div",{class:"tcard",onclick(){go(t.id);}},
+        el("span",{class:"lvl "+t.level},t.level),
+        el("div",{class:"tn"},"MODULE "+String(n+1).padStart(2,"0")+" · "+t.days_range),
+        el("h3",{},t.title),
+        el("p",{},t.blurb)
+      )));
+      wrap.append(r(grid));
+      main.innerHTML="";main.append(wrap);window.scrollTo(0,0);
+    }
+
+    function renderTopic(t) {
+      setActive(t.id);
+      store.add(t.id);
+      renderNav();
+      setActive(t.id);
+      const idx = TOPICS.indexOf(t);
+      const wrap = el("div",{});
+      let i=0;
+      const r=c=>{c.classList.add("reveal");c.style.setProperty("--i",i++);return c;};
+
+      wrap.append(r(el("div",{class:"thead"},
+        el("div",{class:"crumb"},
+          el("a",{onclick(){go(null);}},"Personalization Lab"),
+          "/",
+          " "+String(idx+1).padStart(2,"0"),
+          el("span",{class:"lvl "+t.level},t.level)
+        ),
+        el("h2",{},t.title),
+        el("p",{class:"blurb"},t.days_range+" — "+t.blurb),
+        lens(t.fit)
+      )));
+
+      wrap.append(r(section("Week schedule","daily plan")));
+      wrap.append(r(scheduleTable(t.days, t.milestone)));
+
+      wrap.append(r(section("Reading","sources")));
+      wrap.append(r(sourceCards(t.sources)));
+
+      wrap.append(r(section("Key concepts","tap a chip")));
+      wrap.append(r(concepts(t.concepts)));
+
+      if(t.deepDives&&t.deepDives.length){
+        wrap.append(r(section("Going deeper","optional")));
+        wrap.append(r(deepDives(t.deepDives)));
+      }
+      if(t.interviewAnswer) wrap.append(r(answerBlock(t.interviewAnswer)));
+
+      const navBtns=el("div",{style:"display:flex;justify-content:space-between;margin-top:40px;gap:12px"});
+      if(idx>0) navBtns.append(el("button",{class:"btn ghost",onclick(){go(TOPICS[idx-1].id);}}, "← "+TOPICS[idx-1].title));
+      else navBtns.append(el("span",{}));
+      if(idx<TOPICS.length-1) navBtns.append(el("button",{class:"btn ghost",onclick(){go(TOPICS[idx+1].id);}}, TOPICS[idx+1].title+" →"));
+      wrap.append(r(navBtns));
+
+      main.innerHTML="";main.append(wrap);window.scrollTo(0,0);
+    }
+
+    /* router */
+    function go(id){location.hash=id?"#"+id:"";}
+    function route(){
+      const id=location.hash.slice(1);
+      closeDrawer();
+      const t=TOPICS.find(x=>x.id===id);
+      if(t) renderTopic(t); else renderHome();
+    }
+    window.addEventListener("hashchange",route);
+
+    /* search */
+    const searchBox=$("#searchBox"), results=$("#results");
+    let searchIdx=[];
+    TOPICS.forEach(t=>{
+      searchIdx.push({label:t.title,sub:t.days_range,id:t.id});
+      t.concepts.forEach(c=>searchIdx.push({label:c.name,sub:t.title,id:t.id}));
+    });
+    searchBox.addEventListener("input",()=>{
+      const q=searchBox.value.trim().toLowerCase();
+      if(!q){results.classList.remove("show");return;}
+      const hits=searchIdx.filter(x=>x.label.toLowerCase().includes(q)||x.sub.toLowerCase().includes(q)).slice(0,8);
+      results.innerHTML="";
+      hits.forEach((h,n)=>results.append(el("li",{class:n===0?"active":"",onclick(){pick(h);}},el("span",{},h.label),el("small",{},h.sub))));
+      results.classList.toggle("show",hits.length>0);
+    });
+    function pick(h){go(h.id);searchBox.value="";results.classList.remove("show");}
+    searchBox.addEventListener("keydown",e=>{
+      const items=[...results.children];
+      if(!items.length) return;
+      let a=items.findIndex(x=>x.classList.contains("active"));
+      if(e.key==="ArrowDown"){e.preventDefault();items[a]&&items[a].classList.remove("active");items[(a+1)%items.length].classList.add("active");}
+      else if(e.key==="ArrowUp"){e.preventDefault();items[a]&&items[a].classList.remove("active");items[(a-1+items.length)%items.length].classList.add("active");}
+      else if(e.key==="Enter"){const sel=items.find(x=>x.classList.contains("active"));if(sel)sel.click();}
+      else if(e.key==="Escape"){results.classList.remove("show");searchBox.blur();}
+    });
+    document.addEventListener("click",e=>{if(!e.target.closest(".search"))results.classList.remove("show");});
+
+    /* drawer */
+    const rail=$("#rail"), scrim=$("#scrim");
+    $("#menuBtn").addEventListener("click",()=>{const open=rail.classList.toggle("open");scrim.classList.toggle("show",open);document.body.classList.toggle("drawer-open",open);});
+    scrim.addEventListener("click",closeDrawer);
+    function closeDrawer(){rail.classList.remove("open");scrim.classList.remove("show");document.body.classList.remove("drawer-open");}
+    $("#brandHome").addEventListener("click",()=>go(null));
+
+    const navList=$("#navList"), main=$("#main");
+    renderNav();
+    route();
+  </script>
+</body>
+</html>
