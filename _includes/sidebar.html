@@ -1,0 +1,27 @@
+<div class="nav-group">
+  <h3>Overview</h3>
+  <a href="{{ '/' | relative_url }}" {% if page.url == '/' %}class="active"{% endif %}>Home</a>
+  <a href="{{ '/fundamentals/' | relative_url }}" {% if page.url == '/fundamentals/' %}class="active"{% endif %}>Fundamentals</a>
+</div>
+
+<div class="nav-group">
+  <h3>Modules</h3>
+  <a href="{{ '/retrieval/' | relative_url }}" {% if page.url == '/retrieval/' %}class="active"{% endif %}>Retrieval Systems</a>
+  <a href="{{ '/recommendations/' | relative_url }}" {% if page.url == '/recommendations/' %}class="active"{% endif %}>Recommendation Systems</a>
+  <a href="{{ '/personalization/' | relative_url }}" {% if page.url == '/personalization/' %}class="active"{% endif %}>Personalization Layer</a>
+  <a href="{{ '/llm-search/' | relative_url }}" {% if page.url == '/llm-search/' %}class="active"{% endif %}>LLM Search Systems</a>
+  <a href="{{ '/agents/' | relative_url }}" {% if page.url == '/agents/' %}class="active"{% endif %}>Agentic Systems</a>
+  <a href="{{ '/multimodal/' | relative_url }}" {% if page.url == '/multimodal/' %}class="active"{% endif %}>Multimodal Systems</a>
+  <a href="{{ '/production/' | relative_url }}" {% if page.url == '/production/' %}class="active"{% endif %}>Production Systems</a>
+</div>
+
+<div class="nav-group">
+  <h3>Resources</h3>
+  <a href="https://docs.vespa.ai" target="_blank" rel="noreferrer">Vespa</a>
+  <a href="https://github.com/stanford-futuredata/ColBERT" target="_blank" rel="noreferrer">ColBERT</a>
+  <a href="https://eugeneyan.com" target="_blank" rel="noreferrer">Eugene Yan</a>
+  <a href="https://netflixtechblog.com" target="_blank" rel="noreferrer">Netflix Tech Blog</a>
+  <a href="https://platform.openai.com/docs" target="_blank" rel="noreferrer">OpenAI Docs</a>
+  <a href="https://modelcontextprotocol.io" target="_blank" rel="noreferrer">MCP</a>
+  <a href="https://github.com/stanfordnlp/dspy" target="_blank" rel="noreferrer">DSPy</a>
+</div>
