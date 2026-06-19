@@ -373,7 +373,7 @@
         const tr = el("tr",{});
         tr.append(el("td",{},String(d.day)));
         tr.append(el("td",{html:`<span class="src-tag">${d.src}</span>`}));
-        tr.append(el("td",{},d.build));
+        tr.append(el("td",{html:d.build}));
         tr.append(el("td",{html:`<span class="chk">${d.check}</span>`}));
         tbody.append(tr);
       }
